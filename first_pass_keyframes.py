@@ -191,6 +191,7 @@ class Split:
 		self.start_frame = start_frame
 		self.end_frame = end_frame
 
+		self.split_source_file = ""
 		self.tmp_first_pass_path = ""
 		self.tmp_ivf_2_pass_path = ""
 

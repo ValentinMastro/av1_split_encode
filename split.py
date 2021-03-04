@@ -81,7 +81,7 @@ def main_encoding(data):
 	first_pass(data)
 	list_of_frame_dicts = create_splits_from_first_pass_keyframes(data)
 	generate_first_pass_log_for_each_split(data, list_of_frame_dicts)
-
+	generate_source_splits(data)
 
 
 if __name__ == '__main__':

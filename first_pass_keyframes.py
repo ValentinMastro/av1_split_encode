@@ -24,7 +24,7 @@ def DOUBLE_DIVIDE_CHECK(x):
     else:
         return x + 0.000001
 
-def test_candidate_kf(frame_number, frame_since_last_keyframe, list_of_frame_dicts):
+def test_candidate_kf(n_frames, frame_number, frame_since_last_keyframe, list_of_frame_dicts):
 	""" See <source>/av1/encoder/pass2_stategy.c """
 
 	# The first frame is necessarily a keyframe
@@ -32,7 +32,7 @@ def test_candidate_kf(frame_number, frame_since_last_keyframe, list_of_frame_dic
 		return True
 	# We skip the 16 last frames
 	# 	SCENE_CUT_KEY_TEST_INTERVAL = 16
-	if (frame_number + 16 > len(list_of_frame_dicts)):
+	if (frame_number + 16 > n_frames):
 		return False
 
 	#print("test frame : " + str(frame_number))
@@ -155,7 +155,8 @@ def detect_keyframes(data):
 		# Reading of the entire log file -> data in a dict
 		list_of_frame_dicts = []
 
-		for i in range(n_frames):
+		for i in range(n_frames+1):
+			# +1 because the last 208 bytes ar given to "end of sequence"
 			frame_data = log_data.read(208)
 			frame_stats = struct.unpack('26d', frame_data)
 
@@ -171,7 +172,7 @@ def detect_keyframes(data):
 
 		frame_since_last_keyframe = 0
 		for frame_number in range(n_frames):
-			is_keyframe = test_candidate_kf(frame_number, frame_since_last_keyframe, list_of_frame_dicts)
+			is_keyframe = test_candidate_kf(n_frames, frame_number, frame_since_last_keyframe, list_of_frame_dicts)
 
 			if (is_keyframe):
 				kf.append(frame_number)
@@ -181,6 +182,8 @@ def detect_keyframes(data):
 
 		kf.append(n_frames)
 
+		return list_of_frame_dicts
+
 
 class Split:
 	def __init__(self, start_frame, end_frame, split_number):
@@ -188,7 +191,8 @@ class Split:
 		self.start_frame = start_frame
 		self.end_frame = end_frame
 
-		self.tmp_file_path = ""
+		self.tmp_first_pass_path = ""
+		self.tmp_ivf_2_pass_path = ""
 
 
 def generate_split_from_keyframes(data):
@@ -203,5 +207,7 @@ def generate_split_from_keyframes(data):
 
 
 def create_splits_from_first_pass_keyframes(data):
-	detect_keyframes(data)
+	list_of_frame_dicts = detect_keyframes(data)
 	generate_split_from_keyframes(data)
+
+	return list_of_frame_dicts

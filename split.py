@@ -5,6 +5,7 @@ import os
 from json import load
 
 from first_pass_keyframes import create_splits_from_first_pass_keyframes
+from first_pass_logfile import generate_first_pass_log_for_each_split
 
 
 class Encoding_data:
@@ -78,9 +79,8 @@ def first_pass(data):
 
 def main_encoding(data):
 	first_pass(data)
-	create_splits_from_first_pass_keyframes(data)
-
-	# TODO: generate_first_pass_log_for_each_split(data)
+	list_of_frame_dicts = create_splits_from_first_pass_keyframes(data)
+	generate_first_pass_log_for_each_split(data, list_of_frame_dicts)
 
 
 

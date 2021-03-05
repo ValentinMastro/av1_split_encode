@@ -76,11 +76,38 @@ def first_pass(data):
 		os.system(first_pass_command)
 
 
+def generate_keyframes_of_mega_splits(keyframes, frame_limit):
+	""" We select keyframes that will delimit those 'mega splits' """
+	cumulated_number_of_frames = 0
+	mega_keyframes = []
+
+	for index in range(len(keyframes)):
+		if (index == 0):
+			mega_keyframes.append(keyframes[index])
+		elif (index == len(keyframes) - 1):
+			mega_keyframes.append(keyframes[index])
+		else:
+			keyframe = keyframes[index]
+			previous_keyframe = keyframes[index - 1]
+
+			if (cumulated_number_of_frames + (keyframe - previous_keyframe) > frame_limit):
+				mega_keyframes.append(previous_keyframe)
+				cumulated_number_of_frames = 0
+
+			cumulated_number_of_frames = keyframe - previous_keyframe
+
+
+
 
 def main_encoding(data):
 	first_pass(data)
 	list_of_frame_dicts = create_splits_from_first_pass_keyframes(data)
 	generate_first_pass_log_for_each_split(data, list_of_frame_dicts)
+
+	""" We want to write the splits of the source file directly in the RAM.
+	However there probably won't be enough space in the RAM disk.
+	Therefore we create 'mega splits' which will be processed one at a time """
+	generate_keyframes_of_mega_splits(data.keyframes, frame_limit = 25000)
 	generate_source_splits(data)
 
 

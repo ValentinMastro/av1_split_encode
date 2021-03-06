@@ -195,6 +195,16 @@ class Split:
 		self.tmp_first_pass_path = ""
 		self.tmp_ivf_2_pass_path = ""
 
+	def get_second_pass_command(self, data):
+		command_ffmpeg = [data.ffmpeg, '-y', '-loglevel', 'quiet',
+				'-i', self.split_source_file, '-f', 'yuv4mpegpipe', '-pix_fmt', 'yuv420p', '-']
+		command_aomenc = [data.aomenc, '-t', '2', '--pass=2', '--passes=2',
+				'--cpu-used=' + str(data.cpu_use), '--end-usage=q', '--cq-level=' + str(data.q),
+				'--auto-alt-ref=1', '--lag-in-frames=35', '--bit-depth=10', '--fpf=' + self.tmp_first_pass_path,
+				'-o', self.tmp_ivf_2_pass_path, '-']
+
+		return " ".join(command_ffmpeg + ['|'] + command_aomenc)
+
 
 def generate_split_from_keyframes(data):
 	kf = data.keyframes

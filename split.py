@@ -7,6 +7,7 @@ from json import load
 from first_pass_keyframes import create_splits_from_first_pass_keyframes
 from first_pass_logfile import generate_first_pass_log_for_each_split
 from cut_source_in_splits import generate_source_splits
+from second_pass_encode import second_pass_in_parallel
 
 
 class Encoding_data:
@@ -24,11 +25,14 @@ class Encoding_data:
 		# Encoding parameters
 		self.q = arguments.q
 		self.total_number_of_frames = self.get_total_number_of_frames()
-		self.cpu_use = 4
+		self.cpu_use = 9
 
 		# Splitting parameters
 		self.keyframes = []
 		self.splits = []
+
+		# Computer parameters
+		self.number_of_threads = 12
 
 	def get_total_number_of_frames(self):
 		json_file_path = "{}pts.json".format(self.temp_folder)
@@ -115,6 +119,7 @@ def main_encoding(data):
 		end_mega_split = mega_keyframes[i+1]
 
 		generate_source_splits(data, begin_mega_split, end_mega_split)
+		second_pass_in_parallel(data, begin_mega_split, end_mega_split)
 
 
 if __name__ == '__main__':

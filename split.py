@@ -6,6 +6,7 @@ from json import load
 
 from first_pass_keyframes import create_splits_from_first_pass_keyframes
 from first_pass_logfile import generate_first_pass_log_for_each_split
+from cut_source_in_splits import generate_source_splits
 
 
 class Encoding_data:
@@ -94,9 +95,9 @@ def generate_keyframes_of_mega_splits(keyframes, frame_limit):
 				mega_keyframes.append(previous_keyframe)
 				cumulated_number_of_frames = 0
 
-			cumulated_number_of_frames = keyframe - previous_keyframe
+			cumulated_number_of_frames += keyframe - previous_keyframe
 
-
+	return mega_keyframes
 
 
 def main_encoding(data):
@@ -107,8 +108,13 @@ def main_encoding(data):
 	""" We want to write the splits of the source file directly in the RAM.
 	However there probably won't be enough space in the RAM disk.
 	Therefore we create 'mega splits' which will be processed one at a time """
-	generate_keyframes_of_mega_splits(data.keyframes, frame_limit = 25000)
-	generate_source_splits(data)
+	mega_keyframes = generate_keyframes_of_mega_splits(data.keyframes, frame_limit = 25000)
+
+	for i in range(len(mega_keyframes) - 1):
+		begin_mega_split = mega_keyframes[i]
+		end_mega_split = mega_keyframes[i+1]
+
+		generate_source_splits(data, begin_mega_split, end_mega_split)
 
 
 if __name__ == '__main__':

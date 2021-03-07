@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import subprocess
+import os
 
 class Y4M:
 	""" Y4M header data """
@@ -32,7 +33,7 @@ def convert_from_y4m_to_magicyuv(magicyuv_file_path):
 	process = subprocess.Popen(command)
 	process.wait()
 
-	subprocess.Popen(['rm', y4m_file_path]).wait()
+	os.remove(y4m_file_path)
 
 
 def open_y4m_file_in_RAM(y4m_header, split):

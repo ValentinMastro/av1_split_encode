@@ -8,6 +8,7 @@ from first_pass_keyframes import create_splits_from_first_pass_keyframes
 from first_pass_logfile import generate_first_pass_log_for_each_split
 from cut_source_in_splits import generate_source_splits
 from second_pass_encode import second_pass_in_parallel
+from concatenation_mkvmerge import concatenate
 
 
 class Encoding_data:
@@ -18,6 +19,7 @@ class Encoding_data:
 		self.ffmpeg = "ffmpeg"
 		self.ffprobe = "ffprobe"
 		self.aomenc = "aomenc"
+		self.mkvmerge = "mkvmerge"
 		self.temp_folder = "/tmp/av1_split_encode/"
 		os.system("mkdir -p {}".format(self.temp_folder))
 		self.first_pass_log_file = "{}keyframes.log".format(self.temp_folder)
@@ -25,14 +27,17 @@ class Encoding_data:
 		# Encoding parameters
 		self.q = arguments.q
 		self.total_number_of_frames = self.get_total_number_of_frames()
-		self.cpu_use = 9
+		self.cpu_use = 4
 
 		# Splitting parameters
 		self.keyframes = []
 		self.splits = []
 
 		# Computer parameters
-		self.number_of_threads = 12
+		self.number_of_threads = 11
+
+		# Audio parameters
+		self.opus_path = self.temp_folder + "audio.opus"
 
 	def get_total_number_of_frames(self):
 		json_file_path = "{}pts.json".format(self.temp_folder)
@@ -112,15 +117,17 @@ def main_encoding(data):
 	""" We want to write the splits of the source file directly in the RAM.
 	However there probably won't be enough space in the RAM disk.
 	Therefore we create 'mega splits' which will be processed one at a time """
-	mega_keyframes = generate_keyframes_of_mega_splits(data.keyframes, frame_limit = 25000)
+	mega_keyframes = generate_keyframes_of_mega_splits(data.keyframes, frame_limit = 20000)
 
 	for i in range(len(mega_keyframes) - 1):
 		begin_mega_split = mega_keyframes[i]
 		end_mega_split = mega_keyframes[i+1]
 
 		generate_source_splits(data, begin_mega_split, end_mega_split)
-		second_pass_in_parallel(data, begin_mega_split, end_mega_split)
+		second_pass_in_parallel(data, begin_mega_split, end_mega_split, audio = (i == 0))
 
+	# Concatenetion using mkvmerge
+	concatenate(data)
 
 if __name__ == '__main__':
 	arguments = parse_arguments()

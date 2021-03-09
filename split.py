@@ -7,7 +7,7 @@ from json import load
 from first_pass_keyframes import create_splits_from_first_pass_keyframes
 from first_pass_logfile import generate_first_pass_log_for_each_split
 from cut_source_in_splits import generate_source_splits
-from second_pass_encode import second_pass_in_parallel
+from second_pass_encode import second_pass_in_parallel, second_pass_only
 from concatenation_mkvmerge import concatenate
 
 
@@ -23,6 +23,7 @@ class Encoding_data:
 		self.temp_folder = "/tmp/av1_split_encode/"
 		os.system("mkdir -p {}".format(self.temp_folder))
 		self.first_pass_log_file = "{}keyframes.log".format(self.temp_folder)
+		self.concat_only = arguments.concat_only
 
 		# Encoding parameters
 		self.q = arguments.q
@@ -32,6 +33,7 @@ class Encoding_data:
 		# Splitting parameters
 		self.keyframes = []
 		self.splits = []
+		self.split_number_only = arguments.split_number_only
 
 		# Computer parameters
 		self.number_of_threads = 11
@@ -65,6 +67,8 @@ def parse_arguments():
 								"splitting it in RAM and encoding in parallel")
 	parser.add_argument('source_file', type = str)
 	parser.add_argument('destination_file', type = str)
+	parser.add_argument('--split_number_only', type = int, default = 0)
+	parser.add_argument('--concat_only', action = "store_true")
 	parser.add_argument('-q', type = int, default = 34,
 					         help = "Anime 24 / Live action 34")
 
@@ -114,17 +118,24 @@ def main_encoding(data):
 	list_of_frame_dicts = create_splits_from_first_pass_keyframes(data)
 	generate_first_pass_log_for_each_split(data, list_of_frame_dicts)
 
-	""" We want to write the splits of the source file directly in the RAM.
-	However there probably won't be enough space in the RAM disk.
-	Therefore we create 'mega splits' which will be processed one at a time """
-	mega_keyframes = generate_keyframes_of_mega_splits(data.keyframes, frame_limit = 20000)
+	if (data.split_number_only != 0):
+		split = data.splits[data.split_number_only - 1]
+		generate_source_splits(data, split.start_frame, split.end_frame)
+		second_pass_only(data, split)
+		exit(0)
 
-	for i in range(len(mega_keyframes) - 1):
-		begin_mega_split = mega_keyframes[i]
-		end_mega_split = mega_keyframes[i+1]
+	if (not data.concat_only):
+		""" We want to write the splits of the source file directly in the RAM.
+		However there probably won't be enough space in the RAM disk.
+		Therefore we create 'mega splits' which will be processed one at a time """
+		mega_keyframes = generate_keyframes_of_mega_splits(data.keyframes, frame_limit = 25000)
 
-		generate_source_splits(data, begin_mega_split, end_mega_split)
-		second_pass_in_parallel(data, begin_mega_split, end_mega_split, audio = (i == 0))
+		for i in range(len(mega_keyframes) - 1):
+			begin_mega_split = mega_keyframes[i]
+			end_mega_split = mega_keyframes[i+1]
+
+			generate_source_splits(data, begin_mega_split, end_mega_split)
+			second_pass_in_parallel(data, begin_mega_split, end_mega_split, audio = (i == 0))
 
 	# Concatenetion using mkvmerge
 	concatenate(data)

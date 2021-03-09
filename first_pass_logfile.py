@@ -21,11 +21,6 @@ def generate_first_pass_log_for_each_split(data, list_of_frame_dicts):
 		end = split.end_frame
 		length = end - begin
 
-		number = str(split.split_number).zfill(5)
-		split.tmp_first_pass_path = log_file_temp_folder + number + ".log"
-		split.tmp_ivf_2_pass_path = ivf_file_temp_folder + number + ".ivf"
-		split.split_source_file = split_source_folder + number + ".mkv"
-
 		split_first_pass_stats = list_of_frame_dicts[begin:end]
 
 		# Reset index

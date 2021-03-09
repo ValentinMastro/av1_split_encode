@@ -186,19 +186,20 @@ def detect_keyframes(data):
 
 
 class Split:
-	def __init__(self, start_frame, end_frame, split_number):
+	def __init__(self, start_frame, end_frame, split_number, temp_folder):
 		self.split_number = split_number
 		self.start_frame = start_frame
 		self.end_frame = end_frame
 
-		self.split_source_file = ""
-		self.tmp_first_pass_path = ""
-		self.tmp_ivf_2_pass_path = ""
+		number = str(self.split_number).zfill(5)
+		self.tmp_first_pass_path = temp_folder + "splits_log/" + number + ".log"
+		self.tmp_ivf_2_pass_path = temp_folder + "splits_ivf/" + number + ".ivf"
+		self.split_source_file = temp_folder + "splits_source/" + number + ".mkv"
 
-	def get_second_pass_command(self, data):
+	def get_second_pass_command(self, data, t):
 		command_ffmpeg = [data.ffmpeg, '-y', '-loglevel', 'quiet',
 				'-i', self.split_source_file, '-f', 'yuv4mpegpipe', '-pix_fmt', 'yuv420p', '-']
-		command_aomenc = [data.aomenc, '-t', '2', '--pass=2', '--passes=2',
+		command_aomenc = [data.aomenc, '-t', str(t), '--pass=2', '--passes=2',
 				'--cpu-used=' + str(data.cpu_use), '--end-usage=q', '--cq-level=' + str(data.q),
 				'--auto-alt-ref=1', '--lag-in-frames=35', '--bit-depth=10', '--fpf=' + self.tmp_first_pass_path,
 				'-o', self.tmp_ivf_2_pass_path, '-']
@@ -214,7 +215,7 @@ def generate_split_from_keyframes(data):
 		end = kf[i+1]
 		number = i+1 # begin at 1
 
-		data.splits.append(Split(start, end, number))
+		data.splits.append(Split(start, end, number, data.temp_folder))
 
 
 def create_splits_from_first_pass_keyframes(data):

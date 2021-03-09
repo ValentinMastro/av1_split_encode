@@ -17,4 +17,3 @@ def concatenate(data):
 	command = " ".join(strings)
 
 	os.system(command)
-	

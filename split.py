@@ -16,10 +16,10 @@ class Encoding_data:
 		# IO
 		self.source_file = arguments.source_file
 		self.destination_file = arguments.destination_file
-		self.ffmpeg = "ffmpeg"
-		self.ffprobe = "ffprobe"
-		self.aomenc = "aomenc"
-		self.mkvmerge = "mkvmerge"
+		self.ffmpeg = arguments.ffmpeg
+		self.ffprobe = arguments.ffprobe
+		self.aomenc = arguments.aomenc
+		self.mkvmerge = arguments.mkvmerge
 		self.temp_folder = "/tmp/av1_split_encode/"
 		os.system("mkdir -p {}".format(self.temp_folder))
 		self.first_pass_log_file = "{}keyframes.log".format(self.temp_folder)
@@ -34,6 +34,7 @@ class Encoding_data:
 		self.keyframes = []
 		self.splits = []
 		self.split_number_only = arguments.split_number_only
+		self.frame_limit = arguments.frame_limit
 
 		# Computer parameters
 		self.number_of_threads = 11
@@ -56,7 +57,6 @@ class Encoding_data:
 			return len(json_dict["frames"])
 
 
-
 def parse_arguments():
 	"""
 	Configure and parse all arguments of the commande line interface (CLI)
@@ -67,13 +67,17 @@ def parse_arguments():
 								"splitting it in RAM and encoding in parallel")
 	parser.add_argument('source_file', type = str)
 	parser.add_argument('destination_file', type = str)
-	parser.add_argument('--split_number_only', type = int, default = 0)
-	parser.add_argument('--concat_only', action = "store_true")
 	parser.add_argument('-q', type = int, default = 34,
 					         help = "Anime 24 / Live action 34")
+	parser.add_argument('--frame_limit', type = int, default = 20000)
+	parser.add_argument('--split_number_only', type = int, default = 0)
+	parser.add_argument('--concat_only', action = "store_true")
+	parser.add_argument('--ffmpeg', type = str, default = "ffmpeg")
+	parser.add_argument('--aomenc', type = str, default = "aomenc")
+	parser.add_argument('--ffprobe', type = str, default = "ffprobe")
+	parser.add_argument('--mkvmerge', type = str, default = "mkvmerge")
 
 	return parser.parse_args()
-
 
 
 def first_pass(data):
@@ -84,7 +88,7 @@ def first_pass(data):
 						  "-f yuv4mpegpipe -pix_fmt yuv420p -"
 		first_pass_aomenc = "{} -t 12 --pass=1 --passes=2 ".format(data.aomenc) + \
 						  "--auto-alt-ref=1 --lag-in-frames=35 --end-usage=q --cq-level=22 --bit-depth=10 " + \
-						  "--fpf={} -o /dev/null -".format(data.first_pass_log_file)
+						  "--fpf={} -o {} -".format(data.first_pass_log_file, data.destination_file)
 
 		first_pass_command = first_pass_pipe + " | " + first_pass_aomenc
 		os.system(first_pass_command)
@@ -128,7 +132,7 @@ def main_encoding(data):
 		""" We want to write the splits of the source file directly in the RAM.
 		However there probably won't be enough space in the RAM disk.
 		Therefore we create 'mega splits' which will be processed one at a time """
-		mega_keyframes = generate_keyframes_of_mega_splits(data.keyframes, frame_limit = 25000)
+		mega_keyframes = generate_keyframes_of_mega_splits(data.keyframes, frame_limit = data.frame_limit)
 
 		for i in range(len(mega_keyframes) - 1):
 			begin_mega_split = mega_keyframes[i]

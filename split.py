@@ -3,6 +3,7 @@
 import argparse
 import os
 from json import load
+from platform import system
 
 from first_pass_keyframes import create_splits_from_first_pass_keyframes
 from first_pass_logfile import generate_first_pass_log_for_each_split
@@ -13,13 +14,16 @@ from concatenation_mkvmerge import concatenate
 
 class Encoding_data:
 	def __init__(self, arguments):
-		# IO
-		self.source_file = arguments.source_file
-		self.destination_file = arguments.destination_file
+		# Binary file path
 		self.ffmpeg = arguments.ffmpeg
 		self.ffprobe = arguments.ffprobe
 		self.aomenc = arguments.aomenc
 		self.mkvmerge = arguments.mkvmerge
+
+		# IO
+		self.source_file = arguments.source_file
+		self.destination_file = arguments.destination_file
+
 		self.temp_folder = "/tmp/av1_split_encode/"
 		os.system("mkdir -p {}".format(self.temp_folder))
 		self.first_pass_log_file = "{}keyframes.log".format(self.temp_folder)
@@ -28,7 +32,7 @@ class Encoding_data:
 		# Encoding parameters
 		self.q = arguments.q
 		self.total_number_of_frames = self.get_total_number_of_frames()
-		self.cpu_use = 4
+		self.cpu_use = arguments.cpu_use
 
 		# Splitting parameters
 		self.keyframes = []
@@ -37,7 +41,7 @@ class Encoding_data:
 		self.frame_limit = arguments.frame_limit
 
 		# Computer parameters
-		self.number_of_threads = 11
+		self.number_of_threads = arguments.t
 
 		# Audio parameters
 		self.opus_path = self.temp_folder + "audio.opus"
@@ -68,7 +72,11 @@ def parse_arguments():
 	parser.add_argument('source_file', type = str)
 	parser.add_argument('destination_file', type = str)
 	parser.add_argument('-q', type = int, default = 34,
-					         help = "Anime 24 / Live action 34")
+					        help = "Anime 24 / Live action 34")
+	parser.add_argument('-t', type = int, default = 11,
+							help = "Number of threads")
+	parser.add_argument('--cpu_use', type = int, default = 4,
+							help = "Most optimized 4 and 6")
 	parser.add_argument('--frame_limit', type = int, default = 20000)
 	parser.add_argument('--split_number_only', type = int, default = 0)
 	parser.add_argument('--concat_only', action = "store_true")

@@ -94,7 +94,7 @@ def first_pass(data):
 	if (not os.path.isfile(data.first_pass_log_file)):
 		first_pass_pipe = "{} -loglevel quiet -i {} -map 0:v -vf 'setpts=PTS-STARTPTS' ".format(data.ffmpeg, data.source_file) + \
 						  "-f yuv4mpegpipe -pix_fmt yuv420p -"
-		first_pass_aomenc = "{} -t 12 --pass=1 --passes=2 ".format(data.aomenc) + \
+		first_pass_aomenc = "{} -t {} --pass=1 --passes=2 ".format(data.aomenc, data.number_of_threads) + \
 						  "--auto-alt-ref=1 --lag-in-frames=35 --end-usage=q --cq-level=22 --bit-depth=10 " + \
 						  "--fpf={} -o {} -".format(data.first_pass_log_file, data.destination_file)
 

@@ -61,7 +61,7 @@ class Encoding_data:
 			return len(json_dict["frames"])
 
 
-def parse_arguments():
+def parse_arguments(gui = False):
 	"""
 	Configure and parse all arguments of the commande line interface (CLI)
 	Output : args
@@ -80,12 +80,16 @@ def parse_arguments():
 	parser.add_argument('--frame_limit', type = int, default = 20000)
 	parser.add_argument('--split_number_only', type = int, default = 0)
 	parser.add_argument('--concat_only', action = "store_true")
+	parser.add_argument('--threads_per_split', type = int, default = 2)
 	parser.add_argument('--ffmpeg', type = str, default = "ffmpeg")
 	parser.add_argument('--aomenc', type = str, default = "aomenc")
 	parser.add_argument('--ffprobe', type = str, default = "ffprobe")
 	parser.add_argument('--mkvmerge', type = str, default = "mkvmerge")
 
-	return parser.parse_args()
+	if (gui):
+		return parser
+	else:
+		return parser.parse_args()
 
 
 def first_pass(data):

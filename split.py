@@ -39,6 +39,7 @@ class Encoding_data:
 
 		# Computer parameters
 		self.number_of_threads = arguments.t
+		self.threads_per_split = arguments.threads_per_split
 
 
 	def initialize_filesystem(self):
@@ -50,8 +51,8 @@ class Encoding_data:
 		self.temp_dir.makedir("splits_source", recreate = True)
 
 		# Creating empty files
-		self.temp_dir.create("pts.json", wipe = True)
-		self.temp_dir.create("keyframes.log", wipe = True)
+		self.temp_dir.create("pts.json", wipe = False)
+		self.temp_dir.create("keyframes.log", wipe = False)
 		self.temp_dir.create("audio.opus", wipe = True)
 
 		self.json_file_path = self.temp_dir.getsyspath("pts.json")
@@ -60,11 +61,12 @@ class Encoding_data:
 
 
 	def get_total_number_of_frames(self):
-		command = "{}".format(self.ffmpeg) + " -loglevel quiet -i {} -map 0:v ".format(self.source_file) + \
-			"-vf 'setpts=PTS-STARTPTS' -f yuv4mpegpipe -pix_fmt yuv420p - | " + \
-			"{} ".format(self.ffprobe) + "-loglevel quiet -i - -show_frames -of json " + \
-			"> {}".format(self.json_file_path)
-		os.system(command)
+		if (self.temp_dir.getsize("pts.json") == 0):
+			command = "{}".format(self.ffmpeg) + " -l, data.threads_per_spoglevel quiet -i {} -map 0:v ".format(self.source_file) + \
+				"-vf 'setpts=PTS-STARTPTS' -f yuv4mpegpipe -pix_fmt yuv420p - | " + \
+				"{} ".format(self.ffprobe) + "-loglevel quiet -i - -show_frames -of json " + \
+				"> {}".format(self.json_file_path)
+			os.system(command)
 
 		with open(self.json_file_path, 'rt') as json_file_data:
 			json_dict = load(json_file_data)
@@ -105,14 +107,15 @@ def parse_arguments(gui = False):
 def first_pass(data):
 	""" Generate first pass log file of the entire source file """
 
-	first_pass_pipe = "{} -loglevel quiet -i {} -map 0:v -vf 'setpts=PTS-STARTPTS' ".format(data.ffmpeg, data.source_file) + \
-					  "-f yuv4mpegpipe -pix_fmt yuv420p -"
-	first_pass_aomenc = "{} -t {} --pass=1 --passes=2 ".format(data.aomenc, data.number_of_threads) + \
-					  "--auto-alt-ref=1 --lag-in-frames=35 --end-usage=q --cq-level=22 --bit-depth=10 " + \
-					  "--fpf={} -o {} -".format(data.first_pass_log_file_path, data.destination_file)
+	if (data.temp_dir.getsize("keyframes.log") == 0):
+		first_pass_pipe = "{} -loglevel quiet -i {} -map 0:v -vf 'setpts=PTS-STARTPTS' ".format(data.ffmpeg, data.source_file) + \
+						  "-f yuv4mpegpipe -pix_fmt yuv420p -"
+		first_pass_aomenc = "{} -t {} --pass=1 --passes=2 ".format(data.aomenc, data.number_of_threads) + \
+						  "--auto-alt-ref=1 --lag-in-frames=35 --end-usage=q --cq-level=22 --bit-depth=10 " + \
+						  "--fpf={} -o {} -".format(data.first_pass_log_file_path, data.destination_file)
 
-	first_pass_command = first_pass_pipe + " | " + first_pass_aomenc
-	os.system(first_pass_command)
+		first_pass_command = first_pass_pipe + " | " + first_pass_aomenc
+		os.system(first_pass_command)
 
 
 def generate_keyframes_of_mega_splits(keyframes, frame_limit):

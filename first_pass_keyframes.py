@@ -204,6 +204,7 @@ class Split:
 		self.tmp_ivf_2_pass_path = osfs_temp_dir.getsyspath(ivf_2_pass_path)
 		self.split_source_file = osfs_temp_dir.getsyspath(source_file_path)
 
+
 	def get_second_pass_command(self, data, t):
 		command_ffmpeg = [data.ffmpeg, '-y', '-loglevel', 'quiet',
 				'-i', self.split_source_file, '-f', 'yuv4mpegpipe', '-pix_fmt', 'yuv420p', '-']
@@ -211,6 +212,8 @@ class Split:
 				'--cpu-used=' + str(data.cpu_use), '--end-usage=q', '--cq-level=' + str(data.q),
 				'--auto-alt-ref=1', '--lag-in-frames=35', '--bit-depth=10', '--fpf=' + self.tmp_first_pass_path,
 				'-o', self.tmp_ivf_2_pass_path, '-']
+
+		print(command_ffmpeg, command_aomenc)
 
 		return " ".join(command_ffmpeg + ['|'] + command_aomenc)
 

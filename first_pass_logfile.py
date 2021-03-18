@@ -6,14 +6,6 @@ import struct
 def generate_first_pass_log_for_each_split(data, list_of_frame_dicts):
 	""" For each split, the first pass log file is generated """
 
-	log_file_temp_folder = data.temp_folder + "splits_log/"
-	ivf_file_temp_folder = data.temp_folder + "splits_ivf/"
-	split_source_folder = data.temp_folder + "splits_source/"
-
-	os.system("mkdir -p {}".format(log_file_temp_folder))
-	os.system("mkdir -p {}".format(ivf_file_temp_folder))
-	os.system("mkdir -p {}".format(split_source_folder))
-
 	keys = list_of_frame_dicts[-1].keys()
 
 	for split in data.splits:

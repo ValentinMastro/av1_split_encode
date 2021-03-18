@@ -6,12 +6,12 @@ import os
 def single_threaded_job(args):
 	split, data = args
 
-	command = split.get_second_pass_command(data, 2)
+	command = split.get_second_pass_command(data, data.threads_per_split)
 	os.system(command)
 	os.remove(split.split_source_file)
 
 def encode_audio(data):
-	command = [data.ffmpeg, '-loglevel', 'quiet',
+	command = [data.ffmpeg, '-y', '-loglevel', 'quiet',
 				'-i', data.source_file,
 				'-vn', '-c:a', 'libopus', '-b:a', '196k',
 				data.opus_path]
@@ -21,7 +21,7 @@ def encode_audio(data):
 
 def second_pass_only(data, split):
 	""" Used when we only want to encode one split """
-	command = split.get_second_pass_command(data, 12)
+	command = split.get_second_pass_command(data, data.number_of_threads)
 	os.system(command)
 	os.remove(split.split_source_file)
 

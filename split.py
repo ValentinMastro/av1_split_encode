@@ -3,7 +3,7 @@
 import argparse
 import os
 from json import load
-from platform import system
+from fs.osfs import OSFS
 
 from first_pass_keyframes import create_splits_from_first_pass_keyframes
 from first_pass_logfile import generate_first_pass_log_for_each_split
@@ -23,11 +23,7 @@ class Encoding_data:
 		# IO
 		self.source_file = arguments.source_file
 		self.destination_file = arguments.destination_file
-
-		self.temp_folder = "/tmp/av1_split_encode/"
-		os.system("mkdir -p {}".format(self.temp_folder))
-		self.first_pass_log_file = "{}keyframes.log".format(self.temp_folder)
-		self.concat_only = arguments.concat_only
+		self.initialize_filesystem()
 
 		# Encoding parameters
 		self.q = arguments.q
@@ -35,6 +31,7 @@ class Encoding_data:
 		self.cpu_use = arguments.cpu_use
 
 		# Splitting parameters
+		self.concat_only = arguments.concat_only
 		self.keyframes = []
 		self.splits = []
 		self.split_number_only = arguments.split_number_only
@@ -43,20 +40,33 @@ class Encoding_data:
 		# Computer parameters
 		self.number_of_threads = arguments.t
 
-		# Audio parameters
-		self.opus_path = self.temp_folder + "audio.opus"
+
+	def initialize_filesystem(self):
+		self.temp_dir = OSFS("/tmp").makedir("av1_split_encode", recreate = True)
+
+		# Creating subdirectories
+		self.temp_dir.makedir("splits_ivf", recreate = True)
+		self.temp_dir.makedir("splits_log", recreate = True)
+		self.temp_dir.makedir("splits_source", recreate = True)
+
+		# Creating empty files
+		self.temp_dir.create("pts.json", wipe = True)
+		self.temp_dir.create("keyframes.log", wipe = True)
+		self.temp_dir.create("audio.opus", wipe = True)
+
+		self.json_file_path = self.temp_dir.getsyspath("pts.json")
+		self.first_pass_log_file_path = self.temp_dir.getsyspath("keyframes.log")
+		self.opus_path = self.temp_dir.getsyspath("audio.opus")
+
 
 	def get_total_number_of_frames(self):
-		json_file_path = "{}pts.json".format(self.temp_folder)
+		command = "{}".format(self.ffmpeg) + " -loglevel quiet -i {} -map 0:v ".format(self.source_file) + \
+			"-vf 'setpts=PTS-STARTPTS' -f yuv4mpegpipe -pix_fmt yuv420p - | " + \
+			"{} ".format(self.ffprobe) + "-loglevel quiet -i - -show_frames -of json " + \
+			"> {}".format(self.json_file_path)
+		os.system(command)
 
-		if (not os.path.isfile(json_file_path)):	# If json file does not exists
-			command = "{}".format(self.ffmpeg) + " -loglevel quiet -i {} -map 0:v ".format(self.source_file) + \
-				"-vf 'setpts=PTS-STARTPTS' -f yuv4mpegpipe -pix_fmt yuv420p - | " + \
-				"{} ".format(self.ffprobe) + "-loglevel quiet -i - -show_frames -of json " + \
-				"> {}".format(json_file_path)
-			os.system(command)
-
-		with open(json_file_path, 'rt') as json_file_data:
+		with open(self.json_file_path, 'rt') as json_file_data:
 			json_dict = load(json_file_data)
 			return len(json_dict["frames"])
 
@@ -95,15 +105,14 @@ def parse_arguments(gui = False):
 def first_pass(data):
 	""" Generate first pass log file of the entire source file """
 
-	if (not os.path.isfile(data.first_pass_log_file)):
-		first_pass_pipe = "{} -loglevel quiet -i {} -map 0:v -vf 'setpts=PTS-STARTPTS' ".format(data.ffmpeg, data.source_file) + \
-						  "-f yuv4mpegpipe -pix_fmt yuv420p -"
-		first_pass_aomenc = "{} -t {} --pass=1 --passes=2 ".format(data.aomenc, data.number_of_threads) + \
-						  "--auto-alt-ref=1 --lag-in-frames=35 --end-usage=q --cq-level=22 --bit-depth=10 " + \
-						  "--fpf={} -o {} -".format(data.first_pass_log_file, data.destination_file)
+	first_pass_pipe = "{} -loglevel quiet -i {} -map 0:v -vf 'setpts=PTS-STARTPTS' ".format(data.ffmpeg, data.source_file) + \
+					  "-f yuv4mpegpipe -pix_fmt yuv420p -"
+	first_pass_aomenc = "{} -t {} --pass=1 --passes=2 ".format(data.aomenc, data.number_of_threads) + \
+					  "--auto-alt-ref=1 --lag-in-frames=35 --end-usage=q --cq-level=22 --bit-depth=10 " + \
+					  "--fpf={} -o {} -".format(data.first_pass_log_file_path, data.destination_file)
 
-		first_pass_command = first_pass_pipe + " | " + first_pass_aomenc
-		os.system(first_pass_command)
+	first_pass_command = first_pass_pipe + " | " + first_pass_aomenc
+	os.system(first_pass_command)
 
 
 def generate_keyframes_of_mega_splits(keyframes, frame_limit):
@@ -155,6 +164,7 @@ def main_encoding(data):
 
 	# Concatenetion using mkvmerge
 	concatenate(data)
+	data.temp_dir.close()
 
 if __name__ == '__main__':
 	arguments = parse_arguments()

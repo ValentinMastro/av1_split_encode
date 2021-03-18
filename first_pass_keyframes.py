@@ -115,7 +115,7 @@ def detect_keyframes(data):
 
 	kf = data.keyframes
 	n_frames = data.total_number_of_frames
-	log_file = data.first_pass_log_file
+	log_file = data.first_pass_log_file_path
 
 	""" Each frame gets the same number of bytes data,
 	which in the C code is a struct composed of 26 double.
@@ -186,15 +186,23 @@ def detect_keyframes(data):
 
 
 class Split:
-	def __init__(self, start_frame, end_frame, split_number, temp_folder):
+	def __init__(self, start_frame, end_frame, split_number, osfs_temp_dir):
 		self.split_number = split_number
 		self.start_frame = start_frame
 		self.end_frame = end_frame
 
 		number = str(self.split_number).zfill(5)
-		self.tmp_first_pass_path = temp_folder + "splits_log/" + number + ".log"
-		self.tmp_ivf_2_pass_path = temp_folder + "splits_ivf/" + number + ".ivf"
-		self.split_source_file = temp_folder + "splits_source/" + number + ".mkv"
+
+		first_pass_path = "splits_log/" + number + ".log"
+		ivf_2_pass_path = "splits_ivf/" + number + ".ivf"
+		source_file_path = "splits_source/" + number + ".mkv"
+
+		for path in [first_pass_path, ivf_2_pass_path, source_file_path]:
+			osfs_temp_dir.create(path, wipe = False)
+
+		self.tmp_first_pass_path = osfs_temp_dir.getsyspath(first_pass_path)
+		self.tmp_ivf_2_pass_path = osfs_temp_dir.getsyspath(ivf_2_pass_path)
+		self.split_source_file = osfs_temp_dir.getsyspath(source_file_path)
 
 	def get_second_pass_command(self, data, t):
 		command_ffmpeg = [data.ffmpeg, '-y', '-loglevel', 'quiet',
@@ -215,7 +223,7 @@ def generate_split_from_keyframes(data):
 		end = kf[i+1]
 		number = i+1 # begin at 1
 
-		data.splits.append(Split(start, end, number, data.temp_folder))
+		data.splits.append(Split(start, end, number, data.temp_dir))
 
 
 def create_splits_from_first_pass_keyframes(data):

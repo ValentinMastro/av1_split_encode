@@ -62,7 +62,7 @@ class Encoding_data:
 
 	def get_total_number_of_frames(self):
 		if (self.temp_dir.getsize("pts.json") == 0):
-			command = "{}".format(self.ffmpeg) + " -l, data.threads_per_spoglevel quiet -i {} -map 0:v ".format(self.source_file) + \
+			command = "{}".format(self.ffmpeg) + " -loglevel quiet -i {} -map 0:v ".format(self.source_file) + \
 				"-vf 'setpts=PTS-STARTPTS' -f yuv4mpegpipe -pix_fmt yuv420p - | " + \
 				"{} ".format(self.ffprobe) + "-loglevel quiet -i - -show_frames -of json " + \
 				"> {}".format(self.json_file_path)

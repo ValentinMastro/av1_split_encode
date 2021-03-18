@@ -213,8 +213,6 @@ class Split:
 				'--auto-alt-ref=1', '--lag-in-frames=35', '--bit-depth=10', '--fpf=' + self.tmp_first_pass_path,
 				'-o', self.tmp_ivf_2_pass_path, '-']
 
-		print(command_ffmpeg, command_aomenc)
-
 		return " ".join(command_ffmpeg + ['|'] + command_aomenc)
 
 

@@ -7,7 +7,6 @@ def single_threaded_job(args):
 	split, data = args
 
 	command = split.get_second_pass_command(data, data.threads_per_split)
-	print(command)
 	os.system(command)
 	os.remove(split.split_source_file)
 

@@ -206,8 +206,14 @@ class Split:
 
 
 	def get_second_pass_command(self, data, t):
-		command_ffmpeg = [data.ffmpeg, '-y', '-loglevel', 'quiet',
+		if (data.interlaced):
+			command_ffmpeg = [data.ffmpeg, '-y', '-loglevel', 'quiet',
+					'-i', self.split_source_file, '-vf', 'yadif',
+					'-f', 'yuv4mpegpipe', '-pix_fmt', 'yuv420p', '-']
+		else:
+			command_ffmpeg = [data.ffmpeg, '-y', '-loglevel', 'quiet',
 				'-i', self.split_source_file, '-f', 'yuv4mpegpipe', '-pix_fmt', 'yuv420p', '-']
+
 		command_aomenc = [data.aomenc, '-t', str(t), '--pass=2', '--passes=2',
 				'--cpu-used=' + str(data.cpu_use), '--end-usage=q', '--cq-level=' + str(data.q),
 				'--auto-alt-ref=1', '--lag-in-frames=35', '--bit-depth=10', '--fpf=' + self.tmp_first_pass_path,

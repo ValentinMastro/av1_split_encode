@@ -30,6 +30,11 @@ class Encoding_data:
 		self.cpu_use = arguments.cpu_use
 		self.interlaced = arguments.interlaced
 
+		if (self.interlaced):
+			self.yadif = 'yadif,'
+		else:
+			self.yadif = ''
+
 		# Splitting parameters
 		self.concat_only = arguments.concat_only
 		self.keyframes = []
@@ -103,7 +108,7 @@ def first_pass(data):
 	""" Generate first pass log file of the entire source file """
 
 	if (data.temp_dir.getsize("keyframes.log") == 0):
-		first_pass_pipe = "{} -loglevel quiet -i {} -map 0:v -vf 'setpts=PTS-STARTPTS' ".format(data.ffmpeg, data.source_file) + \
+		first_pass_pipe = "{} -loglevel quiet -i {} -map 0:v -vf '{}setpts=PTS-STARTPTS' ".format(data.ffmpeg, data.source_file, data.yadif) + \
 						  "-f yuv4mpegpipe -pix_fmt yuv420p -"
 		first_pass_aomenc = "{} -t {} --pass=1 --passes=2 ".format(data.aomenc, data.number_of_threads) + \
 						  "--auto-alt-ref=1 --lag-in-frames=35 --end-usage=q --cq-level=22 --bit-depth=10 " + \

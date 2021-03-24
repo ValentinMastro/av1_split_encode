@@ -27,8 +27,9 @@ class Encoding_data:
 
 		# Encoding parameters
 		self.q = arguments.q
-		self.total_number_of_frames = self.get_total_number_of_frames()
+		self.total_number_of_frames = 0
 		self.cpu_use = arguments.cpu_use
+		self.interlaced = arguments.interlaced
 
 		# Splitting parameters
 		self.concat_only = arguments.concat_only
@@ -61,16 +62,11 @@ class Encoding_data:
 
 
 	def get_total_number_of_frames(self):
-		if (self.temp_dir.getsize("pts.json") == 0):
-			command = "{}".format(self.ffmpeg) + " -loglevel quiet -i {} -map 0:v ".format(self.source_file) + \
-				"-vf 'setpts=PTS-STARTPTS' -f yuv4mpegpipe -pix_fmt yuv420p - | " + \
-				"{} ".format(self.ffprobe) + "-loglevel quiet -i - -show_frames -of json " + \
-				"> {}".format(self.json_file_path)
-			os.system(command)
+		""" Uses the file size of keyframes.log to compute the total number
+		of frames """
 
-		with open(self.json_file_path, 'rt') as json_file_data:
-			json_dict = load(json_file_data)
-			return len(json_dict["frames"])
+		log_size = data.temp_dir.getsize("keyframes.log")
+		self.total_number_of_frames = (log_size // 208) - 1
 
 
 def parse_arguments(gui = False):
@@ -93,6 +89,7 @@ def parse_arguments(gui = False):
 	parser.add_argument('--split_number_only', type = int, default = 0)
 	parser.add_argument('--concat_only', action = "store_true")
 	parser.add_argument('--threads_per_split', type = int, default = 2)
+	parser.add_argument('--interlaced', action = "store_true")
 	parser.add_argument('--ffmpeg', type = str, default = "ffmpeg")
 	parser.add_argument('--aomenc', type = str, default = "aomenc")
 	parser.add_argument('--ffprobe', type = str, default = "ffprobe")
@@ -116,6 +113,8 @@ def first_pass(data):
 
 		first_pass_command = first_pass_pipe + " | " + first_pass_aomenc
 		os.system(first_pass_command)
+
+	data.get_total_number_of_frames()
 
 
 def generate_keyframes_of_mega_splits(keyframes, frame_limit):

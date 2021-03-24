@@ -16,7 +16,6 @@ class Encoding_data:
 	def __init__(self, arguments):
 		# Binary file path
 		self.ffmpeg = arguments.ffmpeg
-		self.ffprobe = arguments.ffprobe
 		self.aomenc = arguments.aomenc
 		self.mkvmerge = arguments.mkvmerge
 
@@ -92,7 +91,6 @@ def parse_arguments(gui = False):
 	parser.add_argument('--interlaced', action = "store_true")
 	parser.add_argument('--ffmpeg', type = str, default = "ffmpeg")
 	parser.add_argument('--aomenc', type = str, default = "aomenc")
-	parser.add_argument('--ffprobe', type = str, default = "ffprobe")
 	parser.add_argument('--mkvmerge', type = str, default = "mkvmerge")
 
 	if (gui):

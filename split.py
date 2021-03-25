@@ -69,7 +69,7 @@ class Encoding_data:
 		""" Uses the file size of keyframes.log to compute the total number
 		of frames """
 
-		log_size = data.temp_dir.getsize("keyframes.log")
+		log_size = self.temp_dir.getsize("keyframes.log")
 		self.total_number_of_frames = (log_size // 208) - 1
 
 

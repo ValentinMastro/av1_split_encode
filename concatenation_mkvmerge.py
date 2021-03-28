@@ -10,7 +10,11 @@ def concatenate(data):
 	"""
 
 	list_of_video_splits = [s.tmp_ivf_2_pass_path for s in data.splits]
-	audio_stream = [data.opus_path]
+
+	if (data.no_audio):
+		audio_stream = []
+	else:
+		audio_stream = [data.opus_path]
 
 	number_of_splits = len(list_of_video_splits)
 

@@ -24,6 +24,7 @@ class Encoding_data:
 		self.destination_file = arguments.destination_file
 		self.initialize_filesystem()
 		self.audio_only = arguments.audio_only
+		self.no_audio = arguments.no_audio
 
 		# Encoding parameters
 		self.q = arguments.q
@@ -94,6 +95,7 @@ def parse_arguments(gui = False):
 	parser.add_argument('--split_number_only', type = int, default = 0)
 	parser.add_argument('--concat_only', action = "store_true")
 	parser.add_argument('--audio_only', action = "store_true")
+	parser.add_argument('--no_audio', action = "store_true")
 	parser.add_argument('--threads_per_split', type = int, default = 2)
 	parser.add_argument('--interlaced', action = "store_true")
 	parser.add_argument('--ffmpeg', type = str, default = "ffmpeg")
@@ -171,7 +173,7 @@ def main_encoding(data):
 			end_mega_split = mega_keyframes[i+1]
 
 			generate_source_splits(data, begin_mega_split, end_mega_split)
-			second_pass_in_parallel(data, begin_mega_split, end_mega_split, audio = (i == 0))
+			second_pass_in_parallel(data, begin_mega_split, end_mega_split, audio = (i == 0 and not data.no_audio))
 
 	# Concatenetion using mkvmerge
 	concatenate(data)

@@ -8,7 +8,7 @@ from fs.osfs import OSFS
 from first_pass_keyframes import create_splits_from_first_pass_keyframes
 from first_pass_logfile import generate_first_pass_log_for_each_split
 from cut_source_in_splits import generate_source_splits
-from second_pass_encode import second_pass_in_parallel, second_pass_only
+from second_pass_encode import second_pass_in_parallel, second_pass_only, encode_audio
 from concatenation_mkvmerge import concatenate
 
 
@@ -23,6 +23,7 @@ class Encoding_data:
 		self.source_file = arguments.source_file
 		self.destination_file = arguments.destination_file
 		self.initialize_filesystem()
+		self.audio_only = arguments.audio_only
 
 		# Encoding parameters
 		self.q = arguments.q
@@ -58,7 +59,7 @@ class Encoding_data:
 		# Creating empty files
 		self.temp_dir.create("pts.json", wipe = False)
 		self.temp_dir.create("keyframes.log", wipe = False)
-		self.temp_dir.create("audio.opus", wipe = True)
+		self.temp_dir.create("audio.opus", wipe = False)
 
 		self.json_file_path = self.temp_dir.getsyspath("pts.json")
 		self.first_pass_log_file_path = self.temp_dir.getsyspath("keyframes.log")
@@ -92,6 +93,7 @@ def parse_arguments(gui = False):
 	parser.add_argument('--frame_limit', type = int, default = 20000)
 	parser.add_argument('--split_number_only', type = int, default = 0)
 	parser.add_argument('--concat_only', action = "store_true")
+	parser.add_argument('--audio_only', action = "store_true")
 	parser.add_argument('--threads_per_split', type = int, default = 2)
 	parser.add_argument('--interlaced', action = "store_true")
 	parser.add_argument('--ffmpeg', type = str, default = "ffmpeg")
@@ -147,6 +149,10 @@ def main_encoding(data):
 	first_pass(data)
 	list_of_frame_dicts = create_splits_from_first_pass_keyframes(data)
 	generate_first_pass_log_for_each_split(data, list_of_frame_dicts)
+
+	if (data.audio_only):
+		encode_audio(data)
+		exit(0)
 
 	if (data.split_number_only != 0):
 		split = data.splits[data.split_number_only - 1]

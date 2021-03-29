@@ -19,9 +19,11 @@ def gui():
          			font = ('Helvetica', 12), resolution = 1, k = '--cpu_use'), sg.Text("--cpu_use", font = ('Helvetica', 15) )],
 				[sg.Slider(range = (1000, 50000), default_value = 20000, size = (20,15), orientation = 'horizontal',
          			font = ('Helvetica', 12), resolution = 1000, k = '--frame_limit'), sg.Text("--frame_limit", font = ('Helvetica', 15) )],
-				[sg.Slider(range = (1, 4), default_value = 2, size = (20,15), orientation = 'horizontal',
+				[sg.Slider(range = (0, 4), default_value = 2, size = (20,15), orientation = 'horizontal',
          			font = ('Helvetica', 12), resolution = 1, k = '--threads_per_split'), sg.Text("--threads_per_split", font = ('Helvetica', 15) )],
-				[sg.Output(size = (80, 30), echo_stdout_stderr = True)],
+				[sg.Checkbox("No audio encoded", k = "--no_audio", enable_events = True)],
+				[sg.Checkbox("Audio only", k = "--audio_only", enable_events = True)],
+				[sg.Checkbox("Interlaced video stream", k = "--interlaced", enable_events = True)],
 				[sg.Button(button_text = "Encode", key = "_START_")]]
 
 	# Create main window
@@ -37,6 +39,14 @@ def gui():
 			 			"--frame_limit", str(int(values["--frame_limit"])), "--threads_per_split", str(int(values["--threads_per_split"]))])
 			main_encoding(Encoding_data(args))
 			window.Refresh()
+
+		if (event == "--no_audio"):
+			if (values["--no_audio"]):
+				window["--audio_only"].update(False)
+
+		if (event == "--audio_only"):
+			if (values["--audio_only"]):
+				window["--no_audio"].update(False)
 
 	window.close()
 

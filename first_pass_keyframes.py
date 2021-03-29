@@ -186,7 +186,7 @@ def detect_keyframes(data):
 
 
 class Split:
-	def __init__(self, start_frame, end_frame, split_number, osfs_temp_dir):
+	def __init__(self, start_frame, end_frame, split_number, osfs_temp_dir, threads):
 		self.split_number = split_number
 		self.start_frame = start_frame
 		self.end_frame = end_frame
@@ -203,6 +203,20 @@ class Split:
 		self.tmp_first_pass_path = osfs_temp_dir.getsyspath(first_pass_path)
 		self.tmp_ivf_2_pass_path = osfs_temp_dir.getsyspath(ivf_2_pass_path)
 		self.split_source_file = osfs_temp_dir.getsyspath(source_file_path)
+
+		self.threads = threads
+
+		if (self.threads == 0):
+			length = self.end_frame - self.start_frame
+
+			if (length >= 1000):
+				self.threads = 4
+			elif (length <= 50):
+				self.threads = 1
+			elif (length > 50 and length <= 300):
+				self.threads = 2
+			else:
+				self.threads = 3
 
 
 	def get_second_pass_command(self, data, t):
@@ -230,7 +244,7 @@ def generate_split_from_keyframes(data):
 		end = kf[i+1]
 		number = i+1 # begin at 1
 
-		data.splits.append(Split(start, end, number, data.temp_dir))
+		data.splits.append(Split(start, end, number, data.temp_dir, data.threads_per_split))
 
 
 def create_splits_from_first_pass_keyframes(data):

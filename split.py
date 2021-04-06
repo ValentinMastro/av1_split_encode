@@ -51,7 +51,8 @@ class Encoding_data:
 
 
 	def initialize_filesystem(self):
-		self.temp_dir = OSFS("/tmp").makedir("av1_split_encode", recreate = True)
+		self.tmp = OSFS("/tmp")
+		self.temp_dir = self.tmp.makedir("av1_split_encode", recreate = True)
 
 		# Creating subdirectories
 		self.temp_dir.makedir("splits_ivf", recreate = True)
@@ -76,6 +77,12 @@ class Encoding_data:
 
 	def close(self):
 		self.temp_dir.close()
+
+		if (self.clean_at_the_end):
+			self.tmp.removetree("av1_split_encode")
+
+		self.tmp.close()
+
 
 def parse_arguments(gui = False):
 	"""

@@ -58,11 +58,9 @@ class Encoding_data:
 		self.temp_dir.makedir("splits_source", recreate = True)
 
 		# Creating empty files
-		self.temp_dir.create("pts.json", wipe = False)
 		self.temp_dir.create("keyframes.log", wipe = False)
 		self.temp_dir.create("audio.opus", wipe = False)
 
-		self.json_file_path = self.temp_dir.getsyspath("pts.json")
 		self.first_pass_log_file_path = self.temp_dir.getsyspath("keyframes.log")
 		self.opus_path = self.temp_dir.getsyspath("audio.opus")
 

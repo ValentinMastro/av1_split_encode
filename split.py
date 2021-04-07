@@ -4,6 +4,7 @@ import argparse
 import os
 from json import load
 from fs.osfs import OSFS
+from os import cpu_count
 
 from first_pass_keyframes import create_splits_from_first_pass_keyframes
 from first_pass_logfile import generate_first_pass_log_for_each_split
@@ -96,7 +97,7 @@ def parse_arguments(gui = False):
 	parser.add_argument('destination_file', type = str)
 	parser.add_argument('-q', type = int, default = 34,
 					        help = "Anime 24 / Live action 34")
-	parser.add_argument('-t', type = int, default = 11,
+	parser.add_argument('-t', type = int, default = cpu_count(),
 							help = "Number of threads")
 	parser.add_argument('--cpu_use', type = int, default = 4,
 							help = "Most optimized 4 and 6")
@@ -180,7 +181,7 @@ def main_encoding(data):
 		split = data.splits[data.split_number_only - 1]
 		generate_source_splits(data, split.start_frame, split.end_frame)
 		second_pass_only(data, split)
-		exit(0)
+		return 
 
 
 	""" We want to write the splits of the source file directly in the RAM.
@@ -203,20 +204,24 @@ def main_encoding(data):
 
 	""" End of the encoding process"""
 	data.close()
-	exit(0)
+	return
 
-if __name__ == '__main__':
-	arguments = parse_arguments()
+
+def main(arguments):
 	data = Encoding_data(arguments)
 
 	if (data.audio_only):
 		encode_audio(data)
 		data.close()
-		exit(0)
+		return
 
 	if (data.concat_only):
 		concatenate(data)
 		data.close()
-		exit(0)
+		return
 
 	main_encoding(data)
+
+if __name__ == '__main__':
+	arguments = parse_arguments()
+	main(arguments)

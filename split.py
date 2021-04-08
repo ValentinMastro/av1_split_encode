@@ -5,6 +5,7 @@ import os
 from json import load
 from fs.osfs import OSFS
 from os import cpu_count
+from time import time
 
 from first_pass_keyframes import create_splits_from_first_pass_keyframes
 from first_pass_logfile import generate_first_pass_log_for_each_split
@@ -50,6 +51,10 @@ class Encoding_data:
 		self.number_of_threads = arguments.t
 		self.threads_per_split = arguments.threads_per_split
 
+		# Time measuring
+		self.time_begin = time()
+		self.time_end = 0
+
 
 	def initialize_filesystem(self):
 		self.tmp = OSFS("/tmp")
@@ -75,6 +80,9 @@ class Encoding_data:
 		log_size = self.temp_dir.getsize("keyframes.log")
 		self.total_number_of_frames = (log_size // 208) - 1
 
+	def display_encoding_time(self, end_time):
+		self.time_end = end_time
+		print("Encoding time : {}".format(self.time_end - self.time_begin))
 
 	def close(self):
 		self.temp_dir.close()
@@ -181,7 +189,7 @@ def main_encoding(data):
 		split = data.splits[data.split_number_only - 1]
 		generate_source_splits(data, split.start_frame, split.end_frame)
 		second_pass_only(data, split)
-		return 
+		return
 
 
 	""" We want to write the splits of the source file directly in the RAM.
@@ -204,6 +212,7 @@ def main_encoding(data):
 
 	""" End of the encoding process"""
 	data.close()
+	data.display_encoding_time(time())
 	return
 
 

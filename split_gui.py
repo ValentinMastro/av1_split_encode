@@ -64,9 +64,10 @@ def gui():
 
 
 		if (event == "_START_"):
+			print(args_queue)
 			for arguments in args_queue:
 				begin = time.time()
-				main(args)
+				main(arguments)
 				end = time.time()
 				window.Refresh()
 

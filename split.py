@@ -9,7 +9,7 @@ from time import time
 
 from first_pass_keyframes import create_splits_from_first_pass_keyframes
 from first_pass_logfile import generate_first_pass_log_for_each_split
-from cut_source_in_splits import generate_source_splits
+from generate_splits_from_source import generate_magicyuv_source_splits
 from second_pass_encode import second_pass_in_parallel, second_pass_only, encode_audio
 from concatenation_mkvmerge import concatenate
 
@@ -202,7 +202,7 @@ def main_encoding(data):
 		end_mega_split = mega_keyframes[i+1]
 
 		# WRITING SOURCE SPLITS IN RAM
-		generate_source_splits(data, begin_mega_split, end_mega_split)
+		generate_magicyuv_source_splits(data, begin_mega_split, end_mega_split)
 		# SECOND PASS IN PARALLEL
 		second_pass_in_parallel(data, begin_mega_split, end_mega_split, audio = (i == 0 and not data.no_audio))
 

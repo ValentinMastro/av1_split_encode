@@ -33,12 +33,9 @@ class Encoding_data:
 		self.q = arguments.q
 		self.total_number_of_frames = 0
 		self.cpu_use = arguments.cpu_use
-		self.interlaced = arguments.interlaced
 
-		if (self.interlaced):
-			self.yadif = 'yadif,'
-		else:
-			self.yadif = ''
+		# Filters and interlacing
+		self.initialize_filters_on_source(arguments)
 
 		# Splitting parameters
 		self.concat_only = arguments.concat_only
@@ -80,6 +77,22 @@ class Encoding_data:
 		log_size = self.temp_dir.getsize("keyframes.log")
 		self.total_number_of_frames = (log_size // 208) - 1
 
+	def initialize_filters_on_source(self, arguments):
+		self.filters = []
+
+		self.interlaced = arguments.interlaced
+		self.has_to_be_cropped = not (arguments.crop is None)
+
+		if (self.interlaced):
+			self.filters.append("yadif")
+
+		if (self.has_to_be_cropped):
+			w, h, x, y = arguments.crop
+			self.filters.append(f"crop={w}:{h}:{x}:{y}")
+
+		self.filters.append("setpts=PTS-STARTPTS")
+
+
 	def display_encoding_time(self, end_time):
 		self.time_end = end_time
 		print("Encoding time : {}".format(self.time_end - self.time_begin))
@@ -117,6 +130,7 @@ def parse_arguments(gui = False):
 	parser.add_argument('--clean_at_the_end', action = "store_true")
 	parser.add_argument('--threads_per_split', type = int, default = 2)
 	parser.add_argument('--interlaced', action = "store_true")
+	parser.add_argument('--crop', type = int, nargs = 4)
 	parser.add_argument('--ffmpeg', type = str, default = "ffmpeg")
 	parser.add_argument('--aomenc', type = str, default = "aomenc")
 	parser.add_argument('--mkvmerge', type = str, default = "mkvmerge")
@@ -131,7 +145,8 @@ def first_pass(data):
 	""" Generate first pass log file of the entire source file """
 
 	if (data.temp_dir.getsize("keyframes.log") == 0):
-		first_pass_pipe = "{} -loglevel quiet -i {} -map 0:v -vf '{}setpts=PTS-STARTPTS' ".format(data.ffmpeg, data.source_file, data.yadif) + \
+		filters = ",".join(data.filters)
+		first_pass_pipe = "{} -loglevel quiet -i {} -map 0:v -vf '{}' ".format(data.ffmpeg, data.source_file, filters) + \
 						  "-f yuv4mpegpipe -pix_fmt yuv420p -"
 		first_pass_aomenc = "{} -t {} --pass=1 --passes=2 ".format(data.aomenc, data.number_of_threads) + \
 						  "--auto-alt-ref=1 --lag-in-frames=35 --end-usage=q --cq-level=22 --bit-depth=10 " + \

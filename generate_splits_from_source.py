@@ -66,14 +66,12 @@ def get_header_of_yuv4mpegpipe(pipe_data):
 def generate_magicyuv_source_splits(data, begin, end):
 	""" Cut source file and write it on disk (can be RAM disk) """
 
-	command = ['ffmpeg', '-y',
-				'-loglevel', 'quiet',
+	filters = data.filters[:-1] + ['trim=start_frame=' + str(begin) + ":end_frame=" + str(end)] + [data.filters[-1]]
+
+	command = ['ffmpeg', '-y', '-loglevel', 'quiet',
 				'-i', data.source_file,
-				'-vf', 'trim=start_frame=' + str(begin) + ':end_frame=' + str(end) + \
-				',setpts=PTS-STARTPTS',
-				'-f', 'yuv4mpegpipe',
-				'-pix_fmt', 'yuv420p',
-				'-']
+				'-vf', ",".join(filters),
+				'-f', 'yuv4mpegpipe', '-pix_fmt', 'yuv420p', '-']
 
 	process = subprocess.Popen(command, stdout = subprocess.PIPE, stderr = subprocess.PIPE)
 

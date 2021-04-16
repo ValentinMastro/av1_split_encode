@@ -187,7 +187,7 @@ def main_encoding(data):
 
 	if (data.split_number_only != 0):
 		split = data.splits[data.split_number_only - 1]
-		generate_source_splits(data, split.start_frame, split.end_frame)
+		generate_magicyuv_source_splits(data, split.start_frame, split.end_frame)
 		second_pass_only(data, split)
 		return
 
@@ -225,6 +225,8 @@ def main(arguments):
 		return
 
 	if (data.concat_only):
+		first_pass(data)
+		list_of_frame_dicts = create_splits_from_first_pass_keyframes(data)
 		concatenate(data)
 		data.close()
 		return

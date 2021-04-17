@@ -14,6 +14,30 @@ from second_pass_encode import second_pass_in_parallel, second_pass_only, encode
 from concatenation_mkvmerge import concatenate
 
 
+class Time_Measuring_Data:
+	""" A simple data class that aims to compute how fast we encode """
+
+	def __init__(self):
+		self.fp = [0, 0]		# First pass timers
+		self.sp = [0, 0]		# Second pass timers
+		self.n = 0
+
+	def begin_of_first_pass(self):
+		self.fp[0] = time()
+
+	def end_of_first_pass(self):
+		self.fp[1] = time()
+
+	def begin_of_second_pass(self):
+		self.sp[0] = time()
+
+	def end_of_second_pass(self):
+		self.sp[1] = time()
+
+	def __repr__(self):
+		return f"First pass : {self.n / (self.fp[1] - self.fp[0]):2.2f} fps\n" + \
+			f"Second pass : {self.n / (self.sp[1] - self.sp[0]):2.2f} fps\n"
+
 class Encoding_data:
 	def __init__(self, arguments):
 		# Binary file path
@@ -49,8 +73,7 @@ class Encoding_data:
 		self.threads_per_split = arguments.threads_per_split
 
 		# Time measuring
-		self.time_begin = time()
-		self.time_end = 0
+		self.timer = Time_Measuring_Data()
 
 
 	def initialize_filesystem(self):
@@ -75,7 +98,8 @@ class Encoding_data:
 		of frames """
 
 		log_size = self.temp_dir.getsize("keyframes.log")
-		self.total_number_of_frames = (log_size // 208) - 1
+		self.total_number_of_frames = (log_size // 232) - 1
+		self.timer.n = (log_size // 232) - 1
 
 	def initialize_filters_on_source(self, arguments):
 		self.filters = []
@@ -91,11 +115,6 @@ class Encoding_data:
 			self.filters.append(f"crop={w}:{h}:{x}:{y}")
 
 		self.filters.append("setpts=PTS-STARTPTS")
-
-
-	def display_encoding_time(self, end_time):
-		self.time_end = end_time
-		print("Encoding time : {}".format(self.time_end - self.time_begin))
 
 	def close(self):
 		self.temp_dir.close()
@@ -144,6 +163,8 @@ def parse_arguments(gui = False):
 def first_pass(data):
 	""" Generate first pass log file of the entire source file """
 
+	data.timer.begin_of_first_pass()
+
 	if (data.temp_dir.getsize("keyframes.log") == 0):
 		filters = ",".join(data.filters)
 		first_pass_pipe = "{} -loglevel quiet -i {} -map 0:v -vf '{}' ".format(data.ffmpeg, data.source_file, filters) + \
@@ -155,7 +176,9 @@ def first_pass(data):
 		first_pass_command = first_pass_pipe + " | " + first_pass_aomenc
 		os.system(first_pass_command)
 
+	data.timer.end_of_first_pass()
 	data.get_total_number_of_frames()
+
 
 
 def generate_keyframes_of_mega_splits(keyframes, frame_limit):
@@ -207,6 +230,7 @@ def main_encoding(data):
 		return
 
 
+	data.timer.begin_of_second_pass()
 	""" We want to write the splits of the source file directly in the RAM.
 	However there probably won't be enough space in the RAM disk.
 	Therefore we create 'mega splits' which will be processed one at a time """
@@ -221,13 +245,15 @@ def main_encoding(data):
 		# SECOND PASS IN PARALLEL
 		second_pass_in_parallel(data, begin_mega_split, end_mega_split, audio = (i == 0 and not data.no_audio))
 
+	data.timer.end_of_second_pass()
+
 	# CONCATENATION
 	concatenate(data)
 
 
 	""" End of the encoding process"""
 	data.close()
-	data.display_encoding_time(time())
+	print(data.timer)
 	return
 
 

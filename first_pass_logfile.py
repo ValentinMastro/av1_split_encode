@@ -28,5 +28,5 @@ def generate_first_pass_log_for_each_split(data, list_of_frame_dicts):
 		data_to_write_in_log_file = split_first_pass_stats + [end_of_sequence]
 		with open(split.tmp_first_pass_path, 'wb') as log_file:
 			for struct_data_unpacked in data_to_write_in_log_file:
-				struct_data_packed = struct.pack('26d', *struct_data_unpacked.values())
+				struct_data_packed = struct.pack('26dq2d', *struct_data_unpacked.values())
 				log_file.write(struct_data_packed)

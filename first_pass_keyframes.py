@@ -119,7 +119,8 @@ def detect_keyframes(data):
 
 	""" Each frame gets the same number of bytes data,
 	which in the C code is a struct composed of 26 double.
-	The size of each frame data is 26*sizeof(double) = 26*8 = 208 bytes."""
+	The size of each frame data is 28*sizeof(double) + sizeof(int64_t)
+	= 28*8 + 8 = 232 bytes."""
 
 	# Struct defined in <source>/av1/encoder/firstpass.h
 	FIRSTPASS_STATS_STRUCT_KEYS = [
@@ -148,7 +149,10 @@ def detect_keyframes(data):
 		"new_mv_count",
 		"duration",
 		"count",
-		"raw_error_stdev"
+		"raw_error_stdev",
+		"is_flash", #int64_t
+		"noise_var",
+		"cor_coeff"
 		]
 
 	with open(log_file, 'rb') as log_data:
@@ -156,12 +160,12 @@ def detect_keyframes(data):
 		list_of_frame_dicts = []
 
 		for i in range(n_frames+1):
-			# +1 because the last 208 bytes ar given to "end of sequence"
-			frame_data = log_data.read(208)
-			frame_stats = struct.unpack('26d', frame_data)
+			# +1 because the last 232 bytes are given to "end of sequence"
+			frame_data = log_data.read(232)
+			frame_stats = struct.unpack('26dq2d', frame_data)
 
 			frame_dict = {}
-			for index in range(26):
+			for index in range(len(FIRSTPASS_STATS_STRUCT_KEYS)):
 				frame_dict[FIRSTPASS_STATS_STRUCT_KEYS[index]] = frame_stats[index]
 
 			list_of_frame_dicts.append(frame_dict)

@@ -38,7 +38,7 @@ def open_magicyuv_file_in_RAM(y4m_header, split):
 
 	command = ['ffmpeg', '-y', '-loglevel', 'quiet',
 				'-i', '-',
-				'-c:v', 'magicyuv', split.split_source_file]
+				'-c:v', 'magicyuv', '-pred', '3', split.split_source_file]
 
 	magicyuv_process = subprocess.Popen(command, stdin = subprocess.PIPE)
 	magicyuv_process.stdin.write(y4m_header.signature)

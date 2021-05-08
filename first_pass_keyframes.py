@@ -229,8 +229,10 @@ class Split:
 # '--tune=vmaf_without_preprocessing', '--vmaf-model-path=/usr/share/model/vmaf_v0.6.1.json'
 		command_aomenc = [data.aomenc, '-t', str(t), '--pass=2', '--passes=2',
 				'--cpu-used=' + str(data.cpu_use), '--end-usage=q', '--cq-level=' + str(data.q),
-				'--auto-alt-ref=1', '--lag-in-frames=35', '--bit-depth=10', '--fpf=' + self.tmp_first_pass_path,
-				'-o', self.tmp_ivf_2_pass_path, '-']
+				'--auto-alt-ref=1', '--lag-in-frames=35', '--bit-depth=10',
+				'--frame-boost=1', '--arnr-maxframes=15',
+				'--enable-fwd-kf=1', '--enable-qm=1', '--enable-chroma-deltaq=1', '--quant-b-adapt=1',
+				'--fpf=' + self.tmp_first_pass_path, '-o', self.tmp_ivf_2_pass_path, '-']
 
 		return " ".join(command_ffmpeg + ['|'] + command_aomenc)
 

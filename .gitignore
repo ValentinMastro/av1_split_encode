@@ -18,3 +18,5 @@
 Build
 Decade
 __pycache__
+ffmpeg_build/*
+!ffmpeg_build/install.sh

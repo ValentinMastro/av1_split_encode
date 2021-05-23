@@ -24,9 +24,9 @@ def gui():
          			font = ('Helvetica', 12), resolution = 1000, k = '--frame_limit'), sg.Text("--frame_limit", font = ('Helvetica', 15) )],
 				[sg.Slider(range = (0, 4), default_value = 2, size = (20,15), orientation = 'horizontal',
          			font = ('Helvetica', 12), resolution = 1, k = '--threads_per_split'), sg.Text("--threads_per_split", font = ('Helvetica', 15) )],
-				[sg.Checkbox("No audio encoded", k = "--no_audio", enable_events = True)],
-				[sg.Checkbox("Audio only", k = "--audio_only", enable_events = True)],
+				[sg.Checkbox("No audio encoded", k = "--no_audio", enable_events = True), sg.Checkbox("Audio only", k = "--audio_only", enable_events = True)],
 				[sg.Checkbox("Interlaced video stream", k = "--interlaced", enable_events = True)],
+				[sg.Checkbox("Split method : RAM with magicyuv", k = "RAM_magicyuv", default = True, enable_events = True), sg.Checkbox("Split method : Vapoursynth", k = "Vapoursynth", enable_events = True)],
 				[sg.Button(button_text = "Add to queue", key = "_QUEUE_")],
 				[sg.Table(queue_display, headings = ["Source", "-->", "Destination"], k = "queue_list", num_rows = 3, row_height = 15, auto_size_columns = True, vertical_scroll_only = False, hide_vertical_scroll = True)],
 				[sg.Button(button_text = "Encode", key = "_START_")]]
@@ -48,6 +48,11 @@ def gui():
 
 			# Parsing boolean values
 			for bool_check in ('--no_audio', '--audio_only', '--interlaced'):
+				if (values[bool_check]):
+					list_of_values.append(bool_check)
+
+			list_of_values.append("--split_method")
+			for bool_check in ('RAM_magicyuv', 'Vapoursynth'):
 				if (values[bool_check]):
 					list_of_values.append(bool_check)
 
@@ -78,6 +83,14 @@ def gui():
 		if (event == "--audio_only"):
 			if (values["--audio_only"]):
 				window["--no_audio"].update(False)
+
+		if (event == "RAM_magicyuv"):
+			if (values["RAM_magicyuv"]):
+				window["Vapoursynth"].update(False)
+
+		if (event == "Vapoursynth"):
+			if (values["Vapoursynth"]):
+				window["RAM_magicyuv"].update(False)
 
 	window.close()
 

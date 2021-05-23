@@ -19,15 +19,6 @@ git clone --depth 1 https://code.videolan.org/videolan/dav1d
 
 # Compiling
 
-# ______________AOM_________________
-cd "$SRC/aom"
-mkdir -p cmake_build
-cd cmake_build
-
-cmake -DCMAKE_INSTALL_PREFIX="$PREFIX" -DBUILD_SHARED_LIBS=1 -DCMAKE_BUILD_TYPE=Release -DENABLE_EXAMPLES=1 -DENABLE_DOCS=0 -DENABLE_TESTS=0 -DCMAKE_CXX_FLAGS="-flto -O3 -march=native" -DCMAKE_C_FLAGS="-flto -O3 -march=native" -DCMAKE_C_FLAGS_INIT="-flto=8 -static" ..
-cmake --build . -j 15
-cmake --install .
-
 # ______________VMAF________________
 cd "$SRC/vmaf/libvmaf"
 meson --prefix="$PREFIX" --libdir lib --buildtype release -Denable_docs=false build
@@ -42,6 +33,16 @@ cp -R -P -p model "$PREFIX/share"
 cd "$PREFIX/src/dav1d"
 meson --prefix="$PREFIX" --libdir lib --buildtype release -Dc_args="-O3 -march=native" -Denable_tools=false build
 ninja -C build install
+
+
+# ______________AOM_________________
+cd "$SRC/aom"
+mkdir -p cmake_build
+cd cmake_build
+
+cmake -DCMAKE_INSTALL_PREFIX="$PREFIX" -DBUILD_SHARED_LIBS=1 -DCMAKE_BUILD_TYPE=Release -DENABLE_EXAMPLES=1 -DENABLE_DOCS=0 -DENABLE_TESTS=0 -DCMAKE_CXX_FLAGS="-flto -O3 -march=native" -DCMAKE_C_FLAGS="-flto -O3 -march=native" -DCMAKE_C_FLAGS_INIT="-flto=8 -static" ..
+cmake --build . -j 20
+cmake --install .
 
 
 # FFMPEG

@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import struct
+from split import Split
 
 def get_second_ref_usage_thresh(frame_since_last_keyframe):
 	adapt_upto = 32
@@ -189,54 +190,6 @@ def detect_keyframes(data):
 		return list_of_frame_dicts
 
 
-class Split:
-	def __init__(self, start_frame, end_frame, split_number, osfs_temp_dir, threads):
-		self.split_number = split_number
-		self.start_frame = start_frame
-		self.end_frame = end_frame
-
-		number = str(self.split_number).zfill(5)
-
-		first_pass_path = "splits_log/" + number + ".log"
-		ivf_2_pass_path = "splits_ivf/" + number + ".ivf"
-		source_file_path = "splits_source/" + number + ".mkv"
-
-		for path in [first_pass_path, ivf_2_pass_path, source_file_path]:
-			osfs_temp_dir.create(path, wipe = False)
-
-		self.tmp_first_pass_path = osfs_temp_dir.getsyspath(first_pass_path)
-		self.tmp_ivf_2_pass_path = osfs_temp_dir.getsyspath(ivf_2_pass_path)
-		self.split_source_file = osfs_temp_dir.getsyspath(source_file_path)
-
-		self.threads = threads
-
-		if (self.threads == 0):
-			length = self.end_frame - self.start_frame
-
-			if (length >= 1000):
-				self.threads = 4
-			elif (length <= 50):
-				self.threads = 1
-			elif (length > 50 and length <= 300):
-				self.threads = 2
-			else:
-				self.threads = 3
-
-
-	def get_second_pass_command(self, data, t):
-		command_ffmpeg = [data.ffmpeg, '-y', '-loglevel', 'quiet',
-				'-i', self.split_source_file, '-f', 'yuv4mpegpipe', '-pix_fmt', 'yuv420p', '-']
-# '--tune=vmaf_without_preprocessing', '--vmaf-model-path=/usr/share/model/vmaf_v0.6.1.json'
-		command_aomenc = [data.aomenc, '-t', str(t), '--pass=2', '--passes=2',
-				'--cpu-used=' + str(data.cpu_use), '--end-usage=q', '--cq-level=' + str(data.q),
-				'--auto-alt-ref=1', '--lag-in-frames=35', '--bit-depth=10',
-				'--frame-boost=1', '--arnr-maxframes=15',
-				'--enable-fwd-kf=1', '--enable-qm=1', '--enable-chroma-deltaq=1', '--quant-b-adapt=1',
-				'--fpf=' + self.tmp_first_pass_path, '-o', self.tmp_ivf_2_pass_path, '-']
-
-		return " ".join(command_ffmpeg + ['|'] + command_aomenc)
-
-
 def generate_split_from_keyframes(data):
 	kf = data.keyframes
 
@@ -245,7 +198,7 @@ def generate_split_from_keyframes(data):
 		end = kf[i+1]
 		number = i+1 # begin at 1
 
-		data.splits.append(Split(start, end, number, data.temp_dir, data.threads_per_split))
+		data.splits.append(Split(start, end, number, data))
 
 
 def create_splits_from_first_pass_keyframes(data):

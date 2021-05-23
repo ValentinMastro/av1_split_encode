@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-from split import main, Encoding_data, parse_arguments
+from start_encode import main, Encoding_data, parse_arguments
 import PySimpleGUI as sg
 from os import cpu_count
 import time

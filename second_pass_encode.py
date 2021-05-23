@@ -6,8 +6,14 @@ import os
 def single_threaded_job(args):
 	split, data = args
 
-	command = split.get_second_pass_command(data, split.threads)
+	if (data.split_method == 'RAM_magicyuv'):
+		command = split.get_second_pass_command_with_magicyuv(data, split.threads)
+	elif (data.split_method == 'Vapoursynth'):
+		command = split.get_second_pass_command_with_vapoursynth(data, split.threads)
+
 	os.system(command)
+
+	#split.compute_vmaf()
 	os.remove(split.split_source_file)
 
 def encode_audio(data):
@@ -21,7 +27,7 @@ def encode_audio(data):
 
 def second_pass_only(data, split):
 	""" Used when we only want to encode one split """
-	command = split.get_second_pass_command(data, data.number_of_threads)
+	command = split.get_second_pass_command_with_vapoursynth(data, data.number_of_threads)
 	os.system(command)
 	os.remove(split.split_source_file)
 

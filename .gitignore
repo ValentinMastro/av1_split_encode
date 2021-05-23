@@ -19,4 +19,6 @@ Build
 Decade
 __pycache__
 ffmpeg_build/*
+tests/sources/*
+tests/encoded/*
 !ffmpeg_build/install.sh

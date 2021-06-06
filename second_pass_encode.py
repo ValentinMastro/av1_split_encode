@@ -3,6 +3,9 @@
 import concurrent.futures
 import os
 
+from tqdm import tqdm
+
+
 def single_threaded_job(args):
 	split, data = args
 
@@ -14,6 +17,8 @@ def single_threaded_job(args):
 	os.system(command)
 	#split.compute_vmaf()
 	os.remove(split.split_source_file)
+
+	return split.end_frame - split.start_frame
 
 def encode_audio(data):
 	command = [data.ffmpeg, '-y', '-loglevel', 'quiet',
@@ -42,9 +47,13 @@ def second_pass_in_parallel(data, begin_mega_split, end_mega_split, audio):
 
 	splits_to_reorder.sort(reverse = True, key = lambda s : s.end_frame - s.start_frame)
 
-	with concurrent.futures.ThreadPoolExecutor(max_workers = data.number_of_threads) as pool:
-		if (audio):
-			pool.submit(encode_audio, data)
+	number_of_frames_to_encode = sum([s.end_frame - s.start_frame for s in splits_to_reorder])
 
-		for split in splits_to_reorder:
-			pool.submit(single_threaded_job, [split, data])
+	with tqdm(total=number_of_frames_to_encode) as progress:
+		with concurrent.futures.ThreadPoolExecutor(max_workers = data.number_of_threads) as pool:
+			if (audio):
+				pool.submit(encode_audio, data)
+			futures = [pool.submit(single_threaded_job, [split, data]) for split in splits_to_reorder]
+			for future in concurrent.futures.as_completed(futures):
+				nb_of_encoded_frames = future.result()
+				progress.update(nb_of_encoded_frames)

@@ -39,6 +39,7 @@ class Time_Measuring_Data:
 			f"Second pass : {self.n / (self.sp[1] - self.sp[0]):2.2f} fps\n" + \
 			f"Total time : {self.sp[1] - self.fp[0]} s\n"
 
+
 class Encoding_data:
 	def __init__(self, arguments):
 		# Binary file path

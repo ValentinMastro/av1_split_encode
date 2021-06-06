@@ -9,6 +9,8 @@ class Split:
 		self.start_frame = start_frame
 		self.end_frame = end_frame
 
+		self.data = data
+
 		number = str(self.split_number).zfill(5)
 
 		first_pass_path = "splits_log/" + number + ".log"
@@ -25,10 +27,10 @@ class Split:
 		self.json_file_path = data.temp_dir.getsyspath(json_file_path)
 
 		self.vp_script_path = data.vp_script_path
-
-		self.threads = data.threads_per_split
+		self.split_method = data.split_method
 		self.vmaf_score = -1
 
+		self.threads = data.threads_per_split
 		if (self.threads == 0):
 			length = self.end_frame - self.start_frame
 
@@ -75,11 +77,29 @@ class Split:
 		command_aomenc = self.get_aomenc_second_pass_command(data, t)
 		return " ".join(command_vspipe) + " | " + " ".join(command_aomenc)
 
-	def compute_vmaf(self):
+	def compute_vmaf_with_magicyuv(self):
 		command_vmaf = ["bash", "vmaf.sh",  self.split_source_file, self.tmp_ivf_2_pass_path, self.json_file_path]
 		os.system(" ".join(command_vmaf))
 
-		# Read vmaf score
-		with open(self.json_file_path, "r") as json_file:
+	def compute_vmaf_with_vapoursynth(self):
+		command_vspipe = self.get_vapoursynth_pipe_command()
+		model_path = os.path.join(os.getcwd(), 'ffmpeg_build/share/model/vmaf_v0.6.1neg.json')
+		command_vmaf = [self.data.ffmpeg, '-y',
+			'-loglevel', 'quiet', '-r', '24000/1001', '-i', '-',
+			'-c:v', 'libdav1d', '-framethreads', '1',
+			'-r', '24000/1001', '-i', self.tmp_ivf_2_pass_path,
+			'-filter_complex',
+			f'"[0:v]setpts=PTS-STARTPTS[ref];[1:v]setpts=PTS-STARTPTS[test];[test][ref]libvmaf=psnr=1:ssim=1:n_threads=1:log_fmt=json:log_path={self.json_file_path}:model_path={model_path}"',
+			'-f', 'null', '/dev/null']
+
+		os.system(" ".join(command_vspipe) + " | " + " ".join(command_vmaf))
+
+	def compute_vmaf(self):
+		if (self.split_method == "RAM_magicyuv"):
+			self.compute_vmaf_with_magicyuv()
+		elif (self.split_method == "Vapoursynth"):
+			self.compute_vmaf_with_vapoursynth()
+
+		with open(self.json_file_path, 'r') as json_file:
 			json_data = load(json_file)
 			self.vmaf_score = float(json_data["pooled_metrics"]["vmaf"]["mean"])

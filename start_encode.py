@@ -166,7 +166,7 @@ def parse_arguments(gui = False):
 	parser.add_argument('--interlaced', action = "store_true")
 	parser.add_argument('--crop', type = int, nargs = 4)
 	parser.add_argument('--split_method', choices = ['RAM_magicyuv', 'Vapoursynth'], default = 'RAM_magicyuv')
-	parser.add_argument('--ffmpeg', type = str, default = "ffmpeg")
+	parser.add_argument('--ffmpeg', type = str, default = "./ffmpeg_build/bin/ffmpeg")
 	parser.add_argument('--aomenc', type = str, default = "aomenc")
 	parser.add_argument('--mkvmerge', type = str, default = "mkvmerge")
 

@@ -54,7 +54,7 @@ class Split:
 
 	def get_vapoursynth_pipe_command(self):
 		command_vspipe = ["vspipe", "--start", str(self.start_frame),
-				"--end", str(self.end_frame - 1), '--y4m', self.vp_script_path, '-c', '-']
+				"--end", str(self.end_frame - 1), '--y4m', self.vp_script_path, '-c', '-', '2>', '/dev/null']
 		return command_vspipe
 
 	def get_aomenc_second_pass_command(self, data, t):
@@ -63,7 +63,7 @@ class Split:
 				'--auto-alt-ref=1', '--lag-in-frames=35', '--bit-depth=10',
 				'--frame-boost=1', '--arnr-maxframes=15',
 				'--enable-fwd-kf=1', '--enable-qm=1', '--enable-chroma-deltaq=1', '--quant-b-adapt=1',
-				'--fpf=' + self.tmp_first_pass_path, '-o', self.tmp_ivf_2_pass_path, '-']
+				'--fpf=' + self.tmp_first_pass_path, '-o', self.tmp_ivf_2_pass_path, '-', '2>', '/dev/null']
 
 		return command_aomenc
 

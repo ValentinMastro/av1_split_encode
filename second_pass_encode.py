@@ -12,7 +12,6 @@ def single_threaded_job(args):
 		command = split.get_second_pass_command_with_vapoursynth(data, split.threads)
 
 	os.system(command)
-
 	#split.compute_vmaf()
 	os.remove(split.split_source_file)
 
@@ -44,8 +43,8 @@ def second_pass_in_parallel(data, begin_mega_split, end_mega_split, audio):
 	splits_to_reorder.sort(reverse = True, key = lambda s : s.end_frame - s.start_frame)
 
 	with concurrent.futures.ThreadPoolExecutor(max_workers = data.number_of_threads) as pool:
-		for split in splits_to_reorder:
-			pool.submit(single_threaded_job, [split, data])
-
 		if (audio):
 			pool.submit(encode_audio, data)
+
+		for split in splits_to_reorder:
+			pool.submit(single_threaded_job, [split, data])

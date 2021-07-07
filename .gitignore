@@ -1,0 +1,10 @@
+external_binaries/include/*
+external_binaries/lib/*
+external_binaries/share/*
+external_binaries/src/*
+external_binaries/bin/*
+external_binaries/ltmain.sh
+
+gui/*
+src/__pycache__/*
+tests/sources/*

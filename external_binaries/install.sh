@@ -114,7 +114,6 @@ compile_vapoursynth () {
 	git clone --depth 1 https://github.com/vapoursynth/vapoursynth.git
 	# Compile
 	cd "$SRC/vapoursynth"
-	autoreconf -ivf
 	./autogen.sh
 	./configure --prefix="$PREFIX"
 	make
@@ -129,9 +128,9 @@ compile_vapoursynth () {
 check_exec_existence
 mkdir -p "$SRC"
 
-compile_vmaf
-compile_dav1d
-compile_aomenc
-compile_svt_av1
-compile_ffmpeg
+# compile_vmaf
+# compile_dav1d
+# compile_aomenc
+# compile_svt_av1
+# compile_ffmpeg
 compile_vapoursynth
